@@ -94,7 +94,7 @@ async fn main() -> Result<()> {
     let total_conn = num_msgs as u128 * num_nodes as u128;
     let total_msgs = total_conn * num_loops as u128;
     let load_bytes = total_msgs * msg_size as u128;
-    let rate_in_mb = load_bytes * 1_000_000 / time.as_micros() as u128 / 1024 * 1024;
+    let rate_in_mb = load_bytes * 1_000_000 / time.as_micros() as u128 / 1024 / 1024;
     let reqst_rate = total_conn * 1000 / time.as_millis() as u128;
     assert_eq!(RECV_COUNTER.load(Ordering::Relaxed) as u128, total_msgs);
     assert_eq!(
