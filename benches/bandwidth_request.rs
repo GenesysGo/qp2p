@@ -45,7 +45,8 @@ async fn main() -> Result<()> {
             });
             // loop over incoming messages
             while let Ok(Some(WireMsg((_, _, msg)))) = incoming.next().await {
-                drop(msg);
+                let m = msg.clone();
+                std::hint::black_box(m);
                 RECV_COUNTER.fetch_add(1, Ordering::Relaxed);
             }
         }
