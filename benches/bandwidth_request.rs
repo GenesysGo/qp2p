@@ -6,7 +6,7 @@ use std::{
     env,
     net::{Ipv4Addr, SocketAddr},
     sync::{
-        atomic::{AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicUsize, Ordering},
         Once,
     },
     time::Instant,
@@ -38,6 +38,7 @@ async fn main() -> Result<()> {
 
     static RECV_COUNTER: AtomicUsize = AtomicUsize::new(0);
     static SEND_COUNTER: AtomicUsize = AtomicUsize::new(0);
+    static STOP: AtomicBool = AtomicBool::new(false);
     let server_handle = tokio::task::spawn(async move {
         while let Some((_connection, mut incoming)) = incoming_conns.next().await {
             once.call_once(|| {
@@ -48,6 +49,10 @@ async fn main() -> Result<()> {
                 let m = msg.clone();
                 std::hint::black_box(m);
                 RECV_COUNTER.fetch_add(1, Ordering::Relaxed);
+            }
+
+            if STOP.load(Ordering::Relaxed) {
+                break;
             }
         }
     });
@@ -88,7 +93,8 @@ async fn main() -> Result<()> {
     for handle in handles {
         handle.await.unwrap();
     }
-    server_handle.abort();
+    STOP.store(true, Ordering::Relaxed);
+    server_handle.await.unwrap();
     let time = timer.elapsed();
 
     // Calculate load
